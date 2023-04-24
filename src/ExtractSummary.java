@@ -104,9 +104,9 @@ public class ExtractSummary {
     }
 
     public static void main(String[] args) throws IOException {
-        String inputFile = "/Users/ezraford/Desktop/School/CS 159/Final Project/data/input.txt";
-        String outputFile = "/Users/ezraford/Desktop/School/CS 159/Final Project/data/output.txt";
-        String stopListFile = "/Users/ezraford/Desktop/School/CS 159/Final Project/data/stoplist.txt";
+        String inputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/input.txt";
+        String outputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/output.txt";
+        String stopListFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/stoplist.txt";
 
         ExtractSummary sum = new ExtractSummary(inputFile, outputFile, stopListFile);
     }
