@@ -268,11 +268,53 @@ public class ExtractSummary {
         return i + 1;
     }
 
-    public static void main(String[] args) throws IOException {
-        String inputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/input.txt";
-        String outputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/output.txt";
-        String stopListFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/stoplist.txt";
+    /**
+     * Preprocesses the file: Splits the article into sentences, then preprocess the text by
+     * lowercasing, removing stop words, numbers, punctuation, and other special characters from the sentences
+     * @param inputFile file we are working with
+     * @return an array of strings where each entry is a new line
+     * @throws IOException
+     */
+    public static String[] preProcess(String inputFile) throws IOException {
 
-        ExtractSummary sum = new ExtractSummary(inputFile, outputFile, stopListFile);
+        // read the text from the file into a string
+        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line).append("\n");
+        }
+        reader.close();
+        String text = sb.toString();
+        String lowerCaseText = text.toLowerCase();
+
+        // creates a list of all stop list words (we might need to add every letter besides "a" and "i" to the
+        // stop list(?) )
+        String stopListRegex = "\\b(" + String.join("|", stopList) + ")\\b";
+
+        // splits the text into an array of sentences using regex
+        String[] sentences = lowerCaseText.split("(?<=[.!?])\\s+");
+
+        for (String sentence : sentences){
+
+            // puts a space between every punctuation mark
+            sentence = sentence.replaceAll("\\s*([.?!/:',-]+)\\s*", " $1 ");
+
+            // removes all stop list words
+            sentence = sentence.replaceAll(stopListRegex, "");
+            System.out.println(sentence);
+        }
+        return sentences;
+    }
+
+    public static void main(String[] args) throws IOException {
+//        String inputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/input.txt";
+//        String outputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/output.txt";
+//        String stopListFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/stoplist.txt";
+//
+//        ExtractSummary sum = new ExtractSummary(inputFile, outputFile, stopListFile);
+        String test = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/dataExample.txt";
+        String[] check = preProcess(test);
+
     }
 }
