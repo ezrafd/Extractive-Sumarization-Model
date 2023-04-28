@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 // Final Project
 // Tal Mordokh, Ezra Ford, Chris Dennis
@@ -17,6 +18,7 @@ public class ExtractSummary {
     protected String inputFile; // input filepath
     protected String outputFile; // output filepath
     protected String stopListFile; // stop list filepath
+    protected ArrayList<String> abbList; // abbreviation list
 
     /**
      * Constructor
@@ -24,7 +26,7 @@ public class ExtractSummary {
      * @param outputPath output filepath
      * @param stopListPath stop list filepath
      */
-    public ExtractSummary (String inputPath, String outputPath, String stopListPath) throws IOException {
+    public ExtractSummary (String inputPath, String outputPath, String stopListPath, String abbFile) throws IOException {
         // Make filepaths accessible to all methods
         inputFile = inputPath;
         outputFile = outputPath;
@@ -34,6 +36,7 @@ public class ExtractSummary {
         wordCounts = new HashMap<>();
         weightedOccFreq = new HashMap<>();
         stopList = new ArrayList<>();
+        abbList = new ArrayList<>();
 
         // Read stop words from file and add them to stopList
         File file = new File(stopListFile);
@@ -47,27 +50,67 @@ public class ExtractSummary {
             st = br.readLine();
         }
 
+        file = new File(abbFile);
+        br = new BufferedReader(new FileReader(file));
+        st = br.readLine();
+        while (st != null) {
+            String stopWord = st.toLowerCase();
+            abbList.add(stopWord);
+
+            st = br.readLine();
+        }
+
         /* Split the article into sentences, then preprocess the text by
         lowercasing, removing stop words, numbers, punctuation, and other
         special characters from the sentences */
         file = new File(inputFile);
         br = new BufferedReader(new FileReader(file));
-        st = br.readLine();
 
-        while (st != null) {
+        // goes over the text and builds a string
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = br.readLine()) != null) {
+            sb.append(line).append(" ");
+        }
+        String text = sb.toString();
+        text = text.toLowerCase();
+
+        // splits the long string to according to white spaces
+        String[] splitText = text.split("\\s+");
+
+        StringBuilder updatedSb = new StringBuilder();
+
+        // removes all stop list words and removes punctuation marks from abbreviations
+        for (String word : splitText){
+            if (stopList.contains(word)) continue;
+            if (abbList.contains(word)){
+                updatedSb.append(word.replaceAll("\\.","")).append(" ");
+            } else {
+                updatedSb.append(word).append(" ");
+            }
+        }
+
+        String updatedText = updatedSb.toString();
+
+        String newLinesAdded = updatedText.replaceAll("(?<=[.!?])\\s+", "+ $0\n");
+
+        // puts a space before and after every punctuation mark
+        newLinesAdded = newLinesAdded.replaceAll("\\s*.([/:',—+=@#$%^&*()\\[\\]{}><~`\"]+)\\s*", " $0 ");
+
+        String [] sentences = newLinesAdded.split("\n");
+
+        for (String s : sentences){
+            System.out.println(s);
+        }
+
+        for (String sentence : sentences) {
             numSentences++;
-            String stLower = st.toLowerCase();
 
-            String[] words = stLower.split("\\s+");
-            ArrayList<String> rawWords = new ArrayList<String>();
+            String[] words = sentence.split("\\s+");
+            ArrayList<String> rawWords = new ArrayList<>();
 
             // Preprocess sentence
             for (String word : words) {
-                // Skip stop words
-                if (stopList.contains(word)) {
-                    continue;
-                }
-
                 // Add all words that are exclusively letters
                 if (isAlpha(word)) {
                     rawWords.add(word);
@@ -81,8 +124,6 @@ public class ExtractSummary {
                 // Increment wordCount
                 wordCounts.put(jWord, wordCounts.getOrDefault(jWord, 0.0) + 1);
             }
-
-            st = br.readLine();
         }
 
         System.out.println(wordCounts);
@@ -268,53 +309,21 @@ public class ExtractSummary {
         return i + 1;
     }
 
-    /**
-     * Preprocesses the file: Splits the article into sentences, then preprocess the text by
-     * lowercasing, removing stop words, numbers, punctuation, and other special characters from the sentences
-     * @param inputFile file we are working with
-     * @return an array of strings where each entry is a new line
-     * @throws IOException
-     */
-    public static String[] preProcess(String inputFile) throws IOException {
-
-        // read the text from the file into a string
-        BufferedReader reader = new BufferedReader(new FileReader(inputFile));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-        reader.close();
-        String text = sb.toString();
-        String lowerCaseText = text.toLowerCase();
-
-        // creates a list of all stop list words (we might need to add every letter besides "a" and "i" to the
-        // stop list(?) )
-        String stopListRegex = "\\b(" + String.join("|", stopList) + ")\\b";
-
-        // splits the text into an array of sentences using regex
-        String[] sentences = lowerCaseText.split("(?<=[.!?])\\s+");
-
-        for (String sentence : sentences){
-
-            // puts a space between every punctuation mark
-            sentence = sentence.replaceAll("\\s*([.?!/:',-]+)\\s*", " $1 ");
-
-            // removes all stop list words
-            sentence = sentence.replaceAll(stopListRegex, "");
-            System.out.println(sentence);
-        }
-        return sentences;
-    }
 
     public static void main(String[] args) throws IOException {
 //        String inputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/input.txt";
 //        String outputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/output.txt";
 //        String stopListFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/stoplist.txt";
-//
-//        ExtractSummary sum = new ExtractSummary(inputFile, outputFile, stopListFile);
-        String test = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/dataExample.txt";
-        String[] check = preProcess(test);
+//        String abFile =
+
+        String inputFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/input.txt";
+        String outputFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/output.txt";
+        String stopListFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/stoplist.txt";
+        String abbFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/abbreviationList.txt";
+
+        ExtractSummary sum = new ExtractSummary(inputFile, outputFile, stopListFile, abbFile);
+//        String test = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/dataExample.txt";
+//        String[] check = preProcess(test);
 
     }
 }
