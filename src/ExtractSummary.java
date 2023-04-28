@@ -85,6 +85,12 @@ public class ExtractSummary {
             if (stopList.contains(word)) continue;
             if (abbList.contains(word)){
                 updatedSb.append(word.replaceAll("\\.","")).append(" ");
+            } else if (!isAlpha(word)) {
+                if (word.charAt(word.length() - 1) == '.') {
+                    updatedSb.append(word.replaceAll("\\.","")).append(" . ");
+                } else {
+                    updatedSb.append(word.replaceAll("\\.","")).append(" ");
+                }
             } else {
                 updatedSb.append(word).append(" ");
             }
@@ -92,7 +98,7 @@ public class ExtractSummary {
 
         String updatedText = updatedSb.toString();
 
-        String newLinesAdded = updatedText.replaceAll("(?<=[.!?])\\s+", "+ $0\n");
+        String newLinesAdded = updatedText.replaceAll("(?<=[.!?])\\s+", "$0\n");
 
         // puts a space before and after every punctuation mark
         newLinesAdded = newLinesAdded.replaceAll("\\s*.([/:',—+=@#$%^&*()\\[\\]{}><~`\"]+)\\s*", " $0 ");
