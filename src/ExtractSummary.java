@@ -54,8 +54,8 @@ public class ExtractSummary {
         br = new BufferedReader(new FileReader(file));
         st = br.readLine();
         while (st != null) {
-            String stopWord = st.toLowerCase();
-            abbList.add(stopWord);
+            String abb = st.toLowerCase();
+            abbList.add(abb);
 
             st = br.readLine();
         }
@@ -101,13 +101,13 @@ public class ExtractSummary {
         String newLinesAdded = updatedText.replaceAll("(?<=[.!?])\\s+", "$0\n");
 
         // puts a space before and after every punctuation mark
-        newLinesAdded = newLinesAdded.replaceAll("\\s*.([/:',—+=@#$%^&*()\\[\\]{}><~`\"]+)\\s*", " $0 ");
+        newLinesAdded = newLinesAdded.replaceAll("([/:',—+=@#$%^&*()\\[\\]{}><~`\"]+)", " $0 ");
 
         String [] sentences = newLinesAdded.split("\n");
 
-        for (String s : sentences){
-            System.out.println(s);
-        }
+//        for (String s : sentences){
+//            System.out.println(s);
+//        }
 
         for (String sentence : sentences) {
             numSentences++;
@@ -132,7 +132,7 @@ public class ExtractSummary {
             }
         }
 
-        System.out.println(wordCounts);
+        //System.out.println(wordCounts);
 
         // Find frequency of most recurrent word
         double maxValue = 0;
@@ -146,11 +146,11 @@ public class ExtractSummary {
             weightedOccFreq.put(word, wordCounts.get(word)/maxValue);
         }
 
-        System.out.println(weightedOccFreq);
+        //System.out.println(weightedOccFreq);
 
         calculateScores();
 
-        System.out.println(scoresList);
+        //System.out.println(scoresList);
 
         getTopSentences();
     }
@@ -317,15 +317,15 @@ public class ExtractSummary {
 
 
     public static void main(String[] args) throws IOException {
-//        String inputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/input.txt";
-//        String outputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/output.txt";
-//        String stopListFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/stoplist.txt";
-//        String abFile =
+        String inputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/input.txt";
+        String outputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/output.txt";
+        String stopListFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/stoplist.txt";
+        String abbFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/abbreviationList.txt";
 
-        String inputFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/input.txt";
-        String outputFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/output.txt";
-        String stopListFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/stoplist.txt";
-        String abbFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/abbreviationList.txt";
+//        String inputFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/input.txt";
+//        String outputFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/output.txt";
+//        String stopListFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/stoplist.txt";
+//        String abbFile = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/abbreviationList.txt";
 
         ExtractSummary sum = new ExtractSummary(inputFile, outputFile, stopListFile, abbFile);
 //        String test = "/Users/talmordoch/Library/Mobile Documents/com~apple~CloudDocs/Final-Project/data/dataExample.txt";
