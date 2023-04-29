@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -53,6 +50,7 @@ public class ExtractSummary {
         file = new File(abbFile);
         br = new BufferedReader(new FileReader(file));
         st = br.readLine();
+
         while (st != null) {
             String abb = st.toLowerCase();
             abbList.add(abb);
@@ -72,6 +70,9 @@ public class ExtractSummary {
         while ((line = br.readLine()) != null) {
             sb.append(line).append(" ");
         }
+
+        br.close();
+
         String text = sb.toString();
 
         // lowercase text
@@ -82,17 +83,24 @@ public class ExtractSummary {
 
         StringBuilder updatedSb = new StringBuilder();
 
-        // removes all stop list words and removes punctuation marks from abbreviations
+        // removes all stop list words and removes punctuation marks from abbreviations, adds all text
         for (String word : splitText){
-            //if (stopList.contains(word)) continue;
+            // remove periods from abbreviations to prevent false sentence splits
             if (abbList.contains(word)){
-                updatedSb.append(word.replaceAll("\\.","")).append(" ");
+                updatedSb.append(word.replaceAll("\\.","yasharmut")).append(" ");
+            // remove periods from decimals to prevent false sentence splits
             } else if (!isAlpha(word)) {
-                if (word.charAt(word.length() - 1) == '.') {
-                    updatedSb.append(word.replaceAll("\\.","")).append(" . ");
+                if (word.contains(".")) {
+                    // in case it's not a decimal, it's actually the end of a sentence
+                    if (word.charAt(word.length() - 1) == '.') {
+                        updatedSb.append(word.replaceAll("\\.","")).append(" . ");
+                    } else {
+                        updatedSb.append(word.replaceAll("\\.","yasharmut")).append(" ");
+                    }
                 } else {
-                    updatedSb.append(word.replaceAll("\\.","")).append(" ");
+                    updatedSb.append(word).append(" ");
                 }
+            // adds all the words
             } else {
                 updatedSb.append(word).append(" ");
             }
@@ -103,7 +111,7 @@ public class ExtractSummary {
         String newLinesAdded = updatedText.replaceAll("(?<=[.!?])\\s+", "$0\n");
 
         // puts a space before and after every punctuation mark
-        newLinesAdded = newLinesAdded.replaceAll("([/:',—+=@#$%^&*()\\[\\]{}><~`\"]+)", " $0 ");
+        newLinesAdded = newLinesAdded.replaceAll("([/:;',—+=@#$%^&*()\\[\\]{}><~`\"]+)", " $0 ");
 
         sentences = newLinesAdded.split("\n");
 
@@ -122,7 +130,7 @@ public class ExtractSummary {
                 if (stopList.contains(word)) continue;
 
                 // Add all words that are exclusively letters
-                if (isAlpha(word)) {
+                if (isAlpha(word) && !word.contains("yasharmut")) {
                     rawWords.add(word);
                 }
             }
@@ -175,7 +183,7 @@ public class ExtractSummary {
                 }
 
                 // Add all words that are exclusively letters
-                if (isAlpha(word)) {
+                if (isAlpha(word) && !word.contains("yasharmut")) {
                     rawWords.add(word);
                 }
             }
@@ -200,17 +208,17 @@ public class ExtractSummary {
             indexList.add(i);
         }
 
-        System.out.println(indexList);
+        //System.out.println(indexList);
 
         modQuickSort(scoresList, 0, scoresList.size() - 1, indexList);
 
-        System.out.println(scoresList);
-        System.out.println(indexList);
+        //System.out.println(scoresList);
+        //System.out.println(indexList);
 
         // Determine the number of sentences to print (adding two handles the case when there are less than 5 sentences)
         int numToPrint = numSentences / 5 + 2;
 
-        System.out.println(numToPrint);
+        //System.out.println(numToPrint);
 
         ArrayList<Integer> topIndexes = new ArrayList<>(numToPrint);
 
@@ -220,18 +228,23 @@ public class ExtractSummary {
 
         Collections.sort(topIndexes);
 
-        System.out.println(topIndexes);
+        //System.out.println(topIndexes);
+
+        FileWriter writer = new FileWriter(outputFile);
 
         for (int i : topIndexes) {
-            //String topSentence = sentences[i].replaceAll("(?<=[.!?])\\s+", "$0\n");
 
             // puts a space before and after every punctuation mark
-            String topSentence = sentences[i].replaceAll("\\s+([.!?/:',—+=@#$%^&*()\\[\\]{}><~`\"])+\\s+", "$1 ");
+            String topSentence = sentences[i].replaceAll("\\s+([.!?/:;',—+=@#$%^&*()\\[\\]{}><~`\"])+\\s+", "$1 ");
+            topSentence = topSentence.replaceAll("yasharmut", ".");
             topSentence = topSentence.substring(0, 1).toUpperCase() + topSentence.substring(1, topSentence.length()-1);
-            //topSentence.replace(topSentence.charAt(0), topSentence.charAt(0).toUpperCase());
-            //String topSentence = sentences[i].replaceAll("\\s+(\\.)", "$1");
+
             System.out.println(topSentence);
+
+            writer.write(topSentence + " ");
         }
+
+        writer.close();
     }
 
     /**
