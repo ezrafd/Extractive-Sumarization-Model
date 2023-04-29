@@ -2,8 +2,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.regex.Pattern;
 
 // Final Project
@@ -19,6 +18,7 @@ public class ExtractSummary {
     protected String outputFile; // output filepath
     protected String stopListFile; // stop list filepath
     protected ArrayList<String> abbList; // abbreviation list
+    protected String[] sentences; // list of preprocessed sentences as strings
 
     /**
      * Constructor
@@ -73,6 +73,8 @@ public class ExtractSummary {
             sb.append(line).append(" ");
         }
         String text = sb.toString();
+
+        // lowercase text
         text = text.toLowerCase();
 
         // splits the long string to according to white spaces
@@ -82,7 +84,7 @@ public class ExtractSummary {
 
         // removes all stop list words and removes punctuation marks from abbreviations
         for (String word : splitText){
-            if (stopList.contains(word)) continue;
+            //if (stopList.contains(word)) continue;
             if (abbList.contains(word)){
                 updatedSb.append(word.replaceAll("\\.","")).append(" ");
             } else if (!isAlpha(word)) {
@@ -103,7 +105,7 @@ public class ExtractSummary {
         // puts a space before and after every punctuation mark
         newLinesAdded = newLinesAdded.replaceAll("([/:',—+=@#$%^&*()\\[\\]{}><~`\"]+)", " $0 ");
 
-        String [] sentences = newLinesAdded.split("\n");
+        sentences = newLinesAdded.split("\n");
 
 //        for (String s : sentences){
 //            System.out.println(s);
@@ -117,6 +119,8 @@ public class ExtractSummary {
 
             // Preprocess sentence
             for (String word : words) {
+                if (stopList.contains(word)) continue;
+
                 // Add all words that are exclusively letters
                 if (isAlpha(word)) {
                     rawWords.add(word);
@@ -159,18 +163,9 @@ public class ExtractSummary {
         // Initialize scoresList with length equal to the number of sentences in the original text
         scoresList = new ArrayList<>(numSentences);
 
-        /* Split the article into sentences, then preprocess the text by
-        lowercasing, removing stop words, numbers, punctuation, and other
-        special characters from the sentences */
-        File file = new File(inputFile);
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String st = br.readLine();
-
-        while (st != null) {
-            String stLower = st.toLowerCase();
-
-            String[] words = stLower.split("\\s+");
-            ArrayList<String> rawWords = new ArrayList<String>();
+        for (String sentence : sentences){
+            String[] words = sentence.split("\\s+");
+            ArrayList<String> rawWords = new ArrayList<>();
 
             // Preprocess sentence
             for (String word : words) {
@@ -195,8 +190,6 @@ public class ExtractSummary {
             sum /= (double) rawWords.size();
 
             scoresList.add(sum);
-
-            st = br.readLine();
         }
     }
 
@@ -225,20 +218,19 @@ public class ExtractSummary {
             topIndexes.add(indexList.get(j));
         }
 
+        Collections.sort(topIndexes);
+
         System.out.println(topIndexes);
 
-        File file = new File(inputFile);
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String st = br.readLine();
-        int sentenceNum = 0; // "index" of the sentence in the original text
+        for (int i : topIndexes) {
+            //String topSentence = sentences[i].replaceAll("(?<=[.!?])\\s+", "$0\n");
 
-        while (st != null) {
-            if (topIndexes.contains(sentenceNum)) {
-                System.out.println(st);
-            }
-
-            st = br.readLine();
-            sentenceNum++;
+            // puts a space before and after every punctuation mark
+            String topSentence = sentences[i].replaceAll("\\s+([.!?/:',—+=@#$%^&*()\\[\\]{}><~`\"])+\\s+", "$1 ");
+            topSentence = topSentence.substring(0, 1).toUpperCase() + topSentence.substring(1, topSentence.length()-1);
+            //topSentence.replace(topSentence.charAt(0), topSentence.charAt(0).toUpperCase());
+            //String topSentence = sentences[i].replaceAll("\\s+(\\.)", "$1");
+            System.out.println(topSentence);
         }
     }
 
