@@ -18,10 +18,13 @@ public class ExtractSummary {
     protected String[] sentences; // list of preprocessed sentences as strings
 
     /**
-     * Constructor
-     * @param inputPath input filepath
-     * @param outputPath output filepath
-     * @param stopListPath stop list filepath
+     Extracts a summary from a given input file using various pre-processing techniques. The summary is written
+     to an output file.
+     @param inputPath the path to the input file
+     @param outputPath the path to the output file
+     @param stopListPath the path to a file containing stop words
+     @param abbFile the path to a file containing abbreviation words
+     @throws IOException if an I/O error occurs
      */
     public ExtractSummary (String inputPath, String outputPath, String stopListPath, String abbFile) throws IOException {
         // Make filepaths accessible to all methods
@@ -47,6 +50,7 @@ public class ExtractSummary {
             st = br.readLine();
         }
 
+        // Read abbreviation words from file and add them to abbList
         file = new File(abbFile);
         br = new BufferedReader(new FileReader(file));
         st = br.readLine();
@@ -58,9 +62,6 @@ public class ExtractSummary {
             st = br.readLine();
         }
 
-        /* Split the article into sentences, then preprocess the text by
-        lowercasing, removing stop words, numbers, punctuation, and other
-        special characters from the sentences */
         file = new File(inputFile);
         br = new BufferedReader(new FileReader(file));
 
@@ -108,16 +109,13 @@ public class ExtractSummary {
 
         String updatedText = updatedSb.toString();
 
+        // puts every sentence in a new line
         String newLinesAdded = updatedText.replaceAll("(?<=[.!?])\\s+", "$0\n");
 
         // puts a space before and after every punctuation mark
         newLinesAdded = newLinesAdded.replaceAll("([/:;',—+=@#$%^&*()\\[\\]{}><~`\"]+)", " $0 ");
 
         sentences = newLinesAdded.split("\n");
-
-//        for (String s : sentences){
-//            System.out.println(s);
-//        }
 
         for (String sentence : sentences) {
             numSentences++;
@@ -144,8 +142,6 @@ public class ExtractSummary {
             }
         }
 
-        //System.out.println(wordCounts);
-
         // Find frequency of most recurrent word
         double maxValue = 0;
         for (String word : wordCounts.keySet()) {
@@ -157,16 +153,18 @@ public class ExtractSummary {
             // Divide each count by the frequency of the most recurrent word
             weightedOccFreq.put(word, wordCounts.get(word)/maxValue);
         }
-
-        //System.out.println(weightedOccFreq);
-
         calculateScores();
-
-        //System.out.println(scoresList);
-
         getTopSentences();
     }
 
+
+    /**
+     Calculates the score for each sentence in the text based on the weighted frequency of its constituent words.
+     The score is stored in the scoresList field, which is a list of doubles with length equal to the number of sentences
+     in the original text. Each score represents the relative importance of the corresponding sentence in the text.
+     A higher score indicates a higher level of importance.
+     @throws IOException if there is an error reading the stop word file or the input file.
+     */
     public void calculateScores() throws IOException {
         // Initialize scoresList with length equal to the number of sentences in the original text
         scoresList = new ArrayList<>(numSentences);
@@ -201,34 +199,32 @@ public class ExtractSummary {
         }
     }
 
+    /**
+     Retrieves the top sentences from the original text based on their scores and writes them to an output file.
+     The scores are calculated using the weighted occurrence frequency of the words in each sentence.
+     @throws IOException if there is an error writing to the output file
+     */
     public void getTopSentences() throws IOException {
+        // create list to store indexes of sentences
         ArrayList<Integer> indexList = new ArrayList<>(numSentences);
-
         for (int i = 0; i < numSentences; i++) {
             indexList.add(i);
         }
 
-        //System.out.println(indexList);
-
+        // sort scoresList, keeping indexList in the same order
         modQuickSort(scoresList, 0, scoresList.size() - 1, indexList);
-
-        //System.out.println(scoresList);
-        //System.out.println(indexList);
 
         // Determine the number of sentences to print (adding two handles the case when there are less than 5 sentences)
         int numToPrint = numSentences / 5 + 2;
 
-        //System.out.println(numToPrint);
-
+        // create array of indexes of top scoring sentences
         ArrayList<Integer> topIndexes = new ArrayList<>(numToPrint);
-
         for (int j = numSentences - 1; j >= numSentences - numToPrint; j--) {
             topIndexes.add(indexList.get(j));
         }
 
+        // ensure the sentences are output in the correct order as originally seen
         Collections.sort(topIndexes);
-
-        //System.out.println(topIndexes);
 
         FileWriter writer = new FileWriter(outputFile);
 
@@ -239,8 +235,7 @@ public class ExtractSummary {
             topSentence = topSentence.replaceAll("yasharmut", ".");
             topSentence = topSentence.substring(0, 1).toUpperCase() + topSentence.substring(1, topSentence.length()-1);
 
-            System.out.println(topSentence);
-
+            // write the sentence to the output file
             writer.write(topSentence + " ");
         }
 
@@ -320,7 +315,7 @@ public class ExtractSummary {
         return i + 1;
     }
 
-
+    
     public static void main(String[] args) throws IOException {
         String inputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/input.txt";
         String outputFile = "/Users/ezraford/Desktop/School/CS 159/Final-Project/data/output.txt";
